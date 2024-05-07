@@ -17,6 +17,9 @@ export default function Home({
   bikesCount: number;
 }) {
   const [data, setData] = useState<Bike[]>(bikesData || []);
+  const [updatedBikesCount, setUpdateBikesCount] = useState<number>(
+    bikesCount || 0
+  );
   const router = useRouter();
   const page = router.query.page || "1";
   const query = router.query.query || "";
@@ -39,7 +42,24 @@ export default function Home({
     }
   );
 
-  if (isLoading)
+  const { isLoading: bikesCountLoading } = useQuery(
+    ["bikesCount", { query }],
+    () =>
+      fetchBikesCount({
+        location: "munich",
+        distance: "10",
+        stolenness: "proximity",
+        query: typeof query === "string" ? query : query[0],
+      }),
+    {
+      onSuccess: (newData) => {
+        console.log("newData", newData);
+        if (newData) setUpdateBikesCount(newData);
+      },
+    }
+  );
+
+  if (isLoading || bikesCountLoading)
     return (
       <Box
         sx={{
@@ -88,7 +108,22 @@ export default function Home({
 
   return (
     <>
-      <SearchInput />
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          marginRight: 5,
+        }}
+      >
+        <SearchInput />
+        <Typography color="text.primary">
+          Total Bikes{" "}
+          <Typography fontWeight={"bold"} component="span">
+            ({updatedBikesCount})
+          </Typography>
+        </Typography>
+      </Box>
       <Grid container rowSpacing={5}>
         {data.map((record, idx) => (
           <Grid item xs={4}>
@@ -104,7 +139,7 @@ export default function Home({
           marginY: 2,
         }}
       >
-        <PaginationControlled count={bikesCount} />
+        <PaginationControlled count={updatedBikesCount} />
       </Box>
     </>
   );
@@ -131,6 +166,7 @@ export const getServerSideProps: GetServerSideProps<{
       location: "munich",
       distance: "10",
       stolenness: "proximity",
+      query: typeof searchQuery === "string" ? searchQuery : searchQuery[0],
     });
 
     return { props: { bikesData, bikesCount } };

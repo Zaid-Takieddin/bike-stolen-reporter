@@ -123,8 +123,8 @@ export default function Home({
       </Box>
       <Grid container rowSpacing={5}>
         {data.map((record, idx) => (
-          <Grid item xs={4}>
-            <BikeComponent key={idx} bike={record} />
+          <Grid key={idx} item xs={4}>
+            <BikeComponent bike={record} />
           </Grid>
         ))}
       </Grid>

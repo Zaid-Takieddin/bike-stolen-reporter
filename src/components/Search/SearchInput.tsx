@@ -21,7 +21,7 @@ const SearchInput = () => {
       router.push(
         {
           pathname: router.pathname,
-          query: { ...router.query, query: value },
+          query: { ...router.query, query: value, page: 1 },
         },
         undefined,
         { shallow: true }

@@ -1,12 +1,13 @@
 import { fetchBikes, fetchBikesCount } from "@/api/bikes";
 import PaginationControlled from "@/components/Pagination/ControlledPagination";
 import { Bike } from "@/types";
-import { Box, CircularProgress, Grid, Typography } from "@mui/material";
+import { Box, Button, CircularProgress, Grid, Typography } from "@mui/material";
 import { GetServerSideProps } from "next";
 import { useRouter } from "next/router";
 import { useState } from "react";
 import { useQuery } from "react-query";
 import BikeComponent from "@/components/Bike/Bike";
+import SearchInput from "@/components/Search/SearchInput";
 
 export default function Home({
   bikesData,
@@ -18,9 +19,10 @@ export default function Home({
   const [data, setData] = useState<Bike[]>(bikesData || []);
   const router = useRouter();
   const page = router.query.page || "1";
+  const query = router.query.query || "";
 
   const { isLoading, isError } = useQuery(
-    ["bikes", { page }],
+    ["bikes", { page, query }],
     () =>
       fetchBikes({
         location: "munich",
@@ -28,6 +30,7 @@ export default function Home({
         page: typeof page === "string" ? page : page[0],
         per_page: "10",
         stolenness: "proximity",
+        query: typeof query === "string" ? query : query[0],
       }),
     {
       onSuccess: (newData) => {
@@ -57,12 +60,25 @@ export default function Home({
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
+          flexDirection: "column",
           height: "100vh",
+          gap: 2,
         }}
       >
         <Typography variant="h5" color="text.primary">
           No Results Found
         </Typography>
+        <Button
+          variant="contained"
+          onClick={() =>
+            router.push({
+              pathname: router.pathname,
+              query: { ...router.query, query: "" },
+            })
+          }
+        >
+          Head to Homepage
+        </Button>
       </Box>
     );
   }
@@ -72,10 +88,11 @@ export default function Home({
 
   return (
     <>
-      <Grid container rowSpacing={5} marginTop={2}>
-        {data.map((record) => (
+      <SearchInput />
+      <Grid container rowSpacing={5}>
+        {data.map((record, idx) => (
           <Grid item xs={4}>
-            <BikeComponent bike={record} />
+            <BikeComponent key={idx} bike={record} />
           </Grid>
         ))}
       </Grid>
@@ -99,12 +116,14 @@ export const getServerSideProps: GetServerSideProps<{
 }> = async ({ query, res }) => {
   try {
     const page = query.page?.toString() || "1";
+    const searchQuery = query.query?.toString() || "";
     const initialBikesData = await fetchBikes({
       location: "munich",
       distance: "10",
       page: typeof page === "string" ? page : page[0],
       per_page: "10",
       stolenness: "proximity",
+      query: typeof searchQuery === "string" ? searchQuery : searchQuery[0],
     });
 
     const bikesData = initialBikesData.bikes;

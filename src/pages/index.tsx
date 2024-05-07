@@ -1,7 +1,7 @@
 import { fetchBikes, fetchBikesCount } from "@/api/bikes";
 import PaginationControlled from "@/components/Pagination/ControlledPagination";
 import { Bike } from "@/types";
-import { Box, CircularProgress, Grid } from "@mui/material";
+import { Box, CircularProgress, Grid, Typography } from "@mui/material";
 import { GetServerSideProps } from "next";
 import { useRouter } from "next/router";
 import { useState } from "react";
@@ -31,7 +31,7 @@ export default function Home({
       }),
     {
       onSuccess: (newData) => {
-        if (newData) setData(newData.bikes);
+        if (newData) setData([]);
       },
     }
   );
@@ -49,6 +49,23 @@ export default function Home({
         <CircularProgress />;
       </Box>
     );
+
+  if (data.length === 0 || !data) {
+    return (
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          height: "100vh",
+        }}
+      >
+        <Typography variant="h5" color="text.primary">
+          No Results Found
+        </Typography>
+      </Box>
+    );
+  }
 
   return (
     <>

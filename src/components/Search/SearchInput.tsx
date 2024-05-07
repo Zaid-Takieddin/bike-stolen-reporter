@@ -31,9 +31,16 @@ const SearchInput = () => {
   );
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    event.preventDefault();
     const value = event.target.value;
     setTitle(value);
     debouncedSetQuery(value);
+  };
+
+  const handleKeyDown: React.KeyboardEventHandler<HTMLDivElement> = (event) => {
+    if (event.key === "Enter") {
+      event.preventDefault();
+    }
   };
 
   return (
@@ -47,6 +54,7 @@ const SearchInput = () => {
         value={title}
         onChange={handleChange}
         placeholder="Case title"
+        onKeyDown={handleKeyDown}
       />
     </Box>
   );

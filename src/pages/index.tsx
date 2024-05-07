@@ -24,7 +24,7 @@ export default function Home({
   const page = router.query.page || "1";
   const query = router.query.query || "";
 
-  const { isLoading, isError } = useQuery(
+  const { isLoading } = useQuery(
     ["bikes", { page, query }],
     () =>
       fetchBikes({
@@ -101,9 +101,6 @@ export default function Home({
         </Button>
       </Box>
     );
-  }
-
-  if (isError) {
   }
 
   return (

@@ -19,7 +19,7 @@ export default function Home({
   const router = useRouter();
   const page = router.query.page || "1";
 
-  const { isLoading } = useQuery(
+  const { isLoading, isError } = useQuery(
     ["bikes", { page }],
     () =>
       fetchBikes({
@@ -31,7 +31,7 @@ export default function Home({
       }),
     {
       onSuccess: (newData) => {
-        if (newData) setData([]);
+        if (newData) setData(newData.bikes);
       },
     }
   );
@@ -67,6 +67,9 @@ export default function Home({
     );
   }
 
+  if (isError) {
+  }
+
   return (
     <>
       <Grid container rowSpacing={5} marginTop={2}>
@@ -90,24 +93,34 @@ export default function Home({
   );
 }
 
-export const getServerSideProps = (async ({ query }) => {
-  const page = query.page?.toString() || "1";
+export const getServerSideProps: GetServerSideProps<{
+  bikesData: Bike[];
+  bikesCount: number;
+}> = async ({ query, res }) => {
+  try {
+    const page = query.page?.toString() || "1";
+    const initialBikesData = await fetchBikes({
+      location: "munich",
+      distance: "10",
+      page: typeof page === "string" ? page : page[0],
+      per_page: "10",
+      stolenness: "proximity",
+    });
 
-  const bikesCount = await fetchBikesCount({
-    location: "munich",
-    distance: "10",
-    stolenness: "proximity",
-  });
+    const bikesData = initialBikesData.bikes;
+    const bikesCount = await fetchBikesCount({
+      location: "munich",
+      distance: "10",
+      stolenness: "proximity",
+    });
 
-  const initialBikesData = await fetchBikes({
-    location: "munich",
-    distance: "10",
-    page: typeof page === "string" ? page : page[0],
-    per_page: "10",
-    stolenness: "proximity",
-  });
+    return { props: { bikesData, bikesCount } };
+  } catch (error) {
+    console.error("Error fetching bikes:", error);
 
-  const bikesData = initialBikesData.bikes;
+    res.statusCode = 500;
 
-  return { props: { bikesData, bikesCount } };
-}) satisfies GetServerSideProps<{ bikesData: Bike[]; bikesCount: number }>;
+    res.setHeader("Location", "/500");
+    return { props: { bikesData: [], bikesCount: 0 } };
+  }
+};

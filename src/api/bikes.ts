@@ -6,7 +6,7 @@ export const fetchBikes = async (
       new URLSearchParams(URLSearchParamsObject)
   ).then((res) => res.json());
 
-  return initialData.bikes;
+  return initialData;
 };
 
 export const fetchBikesCount = async (

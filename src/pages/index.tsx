@@ -3,7 +3,9 @@ import PaginationControlled from "@/components/Pagination/ControlledPagination";
 import { Bike } from "@/types";
 import { GetServerSideProps } from "next";
 import { useRouter } from "next/router";
-import { useEffect, useState } from "react";
+import { CircularProgress } from "@mui/material";
+import { useQuery } from "react-query";
+import { useState } from "react";
 
 export default function Home({
   bikesData,
@@ -12,28 +14,29 @@ export default function Home({
   bikesData: Bike[];
   bikesCount: number;
 }) {
-  console.log("bikesCount", bikesCount);
   const [data, setData] = useState(bikesData);
+  console.log("data", data);
   const router = useRouter();
   const page = router.query.page || "1";
 
-  useEffect(() => {
-    const fetchData = async () => {
-      const newBikesData = await fetchBikes({
+  const { isLoading, data: newBikesData } = useQuery(
+    ["bikes", { page }],
+    () =>
+      fetchBikes({
         location: "munich",
         distance: "10",
         page: typeof page === "string" ? page : page[0],
         per_page: "10",
         stolenness: "proximity",
-      });
-
-      setData(newBikesData);
-    };
-
-    if (page !== "1") {
-      fetchData();
+      }),
+    {
+      onSuccess: () => {
+        setData(newBikesData);
+      },
     }
-  }, [page]);
+  );
+
+  if (isLoading) return <CircularProgress />;
 
   return (
     <>
